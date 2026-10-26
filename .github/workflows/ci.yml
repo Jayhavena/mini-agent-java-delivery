@@ -21,7 +21,5 @@ jobs:
           cache: maven
       - name: Verify offline tests and package
         run: mvn -B verify
-      - name: Check source index
-        run: java scripts/GenerateSourceIndex.java --check
       - name: Check packaged CLI help
         run: java -jar target/mini-agent.jar --help

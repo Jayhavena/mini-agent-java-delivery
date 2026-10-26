@@ -95,6 +95,19 @@ class TodoAndRegistryTest {
     }
 
     @Test
+    void readDocsAdvertisesExistingBundledExamples() {
+        ReadDocsTool tool = new ReadDocsTool(java.nio.file.Path.of("docs"));
+        assertEquals("Read a local Markdown document from the project docs directory. "
+                + "Available files: agent-notes.md, product-faq.md.", tool.description());
+        ToolContext context = new ToolContext("u", "s", Json.mapper().createObjectNode());
+        for (String path : java.util.List.of("agent-notes.md", "product-faq.md")) {
+            ToolResult result = tool.execute(context, args("path", path));
+            assertTrue(result.ok());
+            assertFalse(Json.readTreeUnchecked(result.content()).path("content").asText().isBlank());
+        }
+    }
+
+    @Test
     void readDocsBlocksTraversalAndMissingFiles() throws Exception {
         java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("mini-agent-docs");
         java.nio.file.Files.writeString(dir.resolve("ok.md"), "# hello");

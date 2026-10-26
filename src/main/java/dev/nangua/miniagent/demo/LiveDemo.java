@@ -54,8 +54,8 @@ public final class LiveDemo {
         turns.add(turn(wired, window1,
                 "帮我查一下杭州现在的天气，然后在待办里加一条“明天带伞”。"));
         turns.add(turn(wired, window2,
-                "参考 docs/company-handbook.md 的周报规范，写一段本周工作周报："
-                        + "完成登录页联调、修复 3 个线上 bug、下周做性能优化；"
+                "参考 docs/agent-notes.md 的项目说明，写一段本周工作周报："
+                        + "完成工具调用与会话隔离联调、修复 3 个 bug、下周做上下文性能优化；"
                         + "然后把“周五 18:00 前发周报”记到这个窗口的待办。"));
         turns.add(turn(wired, window1,
                 "我刚才让你记的待办是什么？顺便说一下刚才杭州的天气。"));

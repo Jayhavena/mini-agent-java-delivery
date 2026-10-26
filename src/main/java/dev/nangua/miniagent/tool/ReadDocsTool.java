@@ -22,7 +22,7 @@ import java.util.Objects;
 public final class ReadDocsTool implements Tool {
     private static final int MAX_CHARS = 12_000;
     private static final List<String> KNOWN_DOCS = List.of(
-            "agent-notes.md", "company-handbook.md", "product-faq.md");
+            "agent-notes.md", "product-faq.md");
 
     private final Path docsRoot;
 

@@ -89,7 +89,7 @@ java -cp target/mini-agent.jar dev.nangua.miniagent.demo.LiveDemo --data-dir dat
 验收顺序：
 
 1. A：查询杭州天气，并记待办“明天带伞”。
-2. B：参考员工手册写周报，并记待办“周五 18:00 前发周报”。
+2. B：读取 [项目说明](<docs/agent-notes.md>)，根据项目笔记写周报，并记待办“周五 18:00 前发周报”。
 3. A：追问“刚才的天气和待办是什么？”
 4. B：列出本窗口待办，确认没有 A 的待办。
 5. 关闭后按 Session ID 加载，再继续聊。
@@ -143,7 +143,7 @@ flowchart LR
 
 Schema 通过系统 Prompt 提供给模型，由模型决定直答还是调用工具，不使用关键词 if-else 决策。当前没有通用 JSON Schema 校验器：协议层检查外壳，参数规则由各工具检查；不能把 Schema 提示等同于完整强校验。
 
-[员工手册](<docs/company-handbook.md>)、[产品 FAQ](<docs/product-faq.md>) 和 [Agent 说明](<docs/agent-notes.md>) 是可公开的示例输入，供 `read_docs` 使用，不是真实公司内部资料。
+[项目说明](<docs/agent-notes.md>) 和 [产品 FAQ](<docs/product-faq.md>) 是可公开的示例输入，供 `read_docs` 使用，不是真实公司内部资料。
 
 ### 4.3 输出协议与解析
 
@@ -225,7 +225,7 @@ system：稳定规则 + 工具 Schema + SESSION_MEMORY + SESSION_STATE + 输出�
 - [其他单元测试](<src/test/java/dev/nangua/miniagent/>)：Parser、工具算法、todo 与 Trace。
 - [DeepSeekLiveTest](<src/test/java/dev/nangua/miniagent/agent/DeepSeekLiveTest.java>)：显式真实模型调用 calculator。
 
-默认测试结果、完整流程补测和真实调用状态以[本轮验证记录](<docs/verification.md>)为准，不在首页维护容易过期的固定测试数量。[CI](<.github/workflows/ci.yml>) 使用 JDK 21，运行默认测试、打包与源码索引检查，不注入模型密钥。
+默认测试结果、完整流程补测和真实调用状态以[本轮验证记录](<docs/verification.md>)为准，不在首页维护容易过期的固定测试数量。[CI](<.github/workflows/ci.yml>) 使用 JDK 21，仅运行默认测试、打包与打包后 CLI 帮助检查，不注入模型密钥。
 
 ## 8. 范围与源码导航
 
@@ -236,4 +236,4 @@ system：稳定规则 + 工具 Schema + SESSION_MEMORY + SESSION_STATE + 输出�
 
 建议阅读顺序：[AgentFactory](<src/main/java/dev/nangua/miniagent/agent/AgentFactory.java>) → [AgentRuntime](<src/main/java/dev/nangua/miniagent/agent/AgentRuntime.java>) → [ContextManager](<src/main/java/dev/nangua/miniagent/context/ContextManager.java>) → [Parser](<src/main/java/dev/nangua/miniagent/parse/AgentOutputParser.java>) → [ToolRegistry](<src/main/java/dev/nangua/miniagent/tool/ToolRegistry.java>) → [Session 存储](<src/main/java/dev/nangua/miniagent/session/JsonSessionRepository.java>)。
 
-附加定位工具：[主源码方法索引](<docs/INDEX.md>)（非必读，JDK 21 可重新生成）。AI 开发过程与本轮修订记录见 [PROMPTS](<PROMPTS.md>)。
+AI 开发过程与本轮修订记录见 [PROMPTS](<PROMPTS.md>)。
