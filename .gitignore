@@ -1,0 +1,16 @@
+target/
+data/
+.env
+*.log
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Local-only backups, learning notes and agent logs
+.local-backup/
+.local-private/
+.learnings/
+
+# Build-tool caches kept in the workspace
+.m2-local/

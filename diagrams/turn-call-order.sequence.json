@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "MiniAgent Java 一轮对话的文件调用顺序",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      1060,
+      560
+    ],
+    "views": [
+      {
+        "id": "assemble",
+        "label": "① 收输入并组装 context",
+        "focus": [
+          "cli",
+          "runtime",
+          "context",
+          "store"
+        ],
+        "note": "AgentRuntime.chat 先把用户消息落盘，再让 ContextManager 拼出 system + 最近原文。"
+      },
+      {
+        "id": "reason",
+        "label": "② 调模型并解析",
+        "focus": [
+          "runtime",
+          "llm",
+          "parser"
+        ],
+        "note": "OpenAiCompatibleClient 走 HTTP，AgentOutputParser 把 JSON envelope 拆成 final / tool_call。"
+      },
+      {
+        "id": "loop",
+        "label": "③ 工具结果回灌后回到 ②",
+        "focus": [
+          "runtime",
+          "tools",
+          "store",
+          "context"
+        ],
+        "note": "ToolResult 写入 session 后立刻进入下一 step，直到 final 或撞到 maxSteps / maxToolRounds。"
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "cli",
+      "type": "frontend",
+      "label": "AgentCli",
+      "sublabel": "REPL"
+    },
+    {
+      "id": "runtime",
+      "type": "backend",
+      "label": "Runtime",
+      "sublabel": "chat 循环"
+    },
+    {
+      "id": "context",
+      "type": "backend",
+      "label": "Context",
+      "sublabel": "ContextManager"
+    },
+    {
+      "id": "llm",
+      "type": "cloud",
+      "label": "LlmClient",
+      "sublabel": "HTTP JSON"
+    },
+    {
+      "id": "parser",
+      "type": "backend",
+      "label": "Parser",
+      "sublabel": "OutputParser"
+    },
+    {
+      "id": "tools",
+      "type": "messagebus",
+      "label": "Tools",
+      "sublabel": "ToolRegistry"
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Sessions",
+      "sublabel": "Repository"
+    },
+    {
+      "id": "trace",
+      "type": "database",
+      "label": "Trace",
+      "sublabel": "TraceLogger"
+    }
+  ],
+  "messages": [
+    {
+      "from": "cli",
+      "to": "runtime",
+      "y": 160,
+      "label": "chat(session, input)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "runtime",
+      "to": "store",
+      "y": 188,
+      "label": "append(USER) + save()"
+    },
+    {
+      "from": "runtime",
+      "to": "trace",
+      "y": 216,
+      "label": "TURN_START",
+      "variant": "dashed"
+    },
+    {
+      "from": "runtime",
+      "to": "context",
+      "y": 245,
+      "label": "maybeCompact() → build()",
+      "variant": "emphasis"
+    },
+    {
+      "from": "context",
+      "to": "runtime",
+      "y": 273,
+      "label": "ContextWindow",
+      "variant": "return"
+    },
+    {
+      "from": "runtime",
+      "to": "llm",
+      "y": 301,
+      "label": "complete(LlmRequest)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "runtime",
+      "to": "parser",
+      "y": 329,
+      "label": "parse(response)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "parser",
+      "to": "runtime",
+      "y": 357,
+      "label": "Final / ToolCall",
+      "variant": "return"
+    },
+    {
+      "from": "runtime",
+      "to": "tools",
+      "y": 385,
+      "label": "execute(tool, args)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "tools",
+      "to": "runtime",
+      "y": 414,
+      "label": "ToolResult(ok)",
+      "variant": "return"
+    },
+    {
+      "from": "runtime",
+      "to": "store",
+      "y": 442,
+      "label": "append(TOOL_RESULT / FINAL) + save()",
+      "variant": "dashed"
+    },
+    {
+      "from": "runtime",
+      "to": "cli",
+      "y": 470,
+      "label": "AgentReply",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "runtime",
+      "from": 150,
+      "to": 174,
+      "type": "backend"
+    },
+    {
+      "participant": "context",
+      "from": 226,
+      "to": 250,
+      "type": "backend"
+    },
+    {
+      "participant": "llm",
+      "from": 282,
+      "to": 306,
+      "type": "cloud"
+    },
+    {
+      "participant": "parser",
+      "from": 310,
+      "to": 334,
+      "type": "backend"
+    },
+    {
+      "participant": "tools",
+      "from": 366,
+      "to": 390,
+      "type": "messagebus"
+    },
+    {
+      "participant": "store",
+      "from": 170,
+      "to": 194,
+      "type": "database"
+    },
+    {
+      "participant": "store",
+      "from": 422,
+      "to": 446,
+      "type": "database"
+    },
+    {
+      "participant": "trace",
+      "from": 198,
+      "to": 222,
+      "type": "database"
+    }
+  ]
+}

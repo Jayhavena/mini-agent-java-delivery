@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Verify offline tests and package
+        run: mvn -B verify
+      - name: Check source index
+        run: java scripts/GenerateSourceIndex.java --check
+      - name: Check packaged CLI help
+        run: java -jar target/mini-agent.jar --help

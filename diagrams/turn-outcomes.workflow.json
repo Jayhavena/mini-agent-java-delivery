@@ -1,0 +1,231 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "MiniAgent Java 一轮对话：决策路径与兜底出口",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": "diagrams/turn-outcomes.workflow.json",
+    "views": [
+      {
+        "id": "happy",
+        "label": "顺利路径",
+        "focus": [
+          "input",
+          "build",
+          "llm",
+          "parse",
+          "final"
+        ],
+        "note": "用户输入 → 组装 → 调模型 → 解析出 final → 返回。"
+      },
+      {
+        "id": "tool-loop",
+        "label": "工具回环",
+        "focus": [
+          "parse",
+          "toolexec",
+          "step"
+        ],
+        "note": "tool_call 分支：注册表执行、结果落盘，step++ 后重新组装。"
+      },
+      {
+        "id": "recovery",
+        "label": "兜底出口",
+        "focus": [
+          "parse",
+          "step",
+          "fallback"
+        ],
+        "note": "步数或工具次数用尽则落到兜底回答；坏 JSON 由纠错提示重试。"
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "surface",
+      "label": "用户与持久化"
+    },
+    {
+      "id": "loop",
+      "label": "Runtime 循环"
+    },
+    {
+      "id": "model",
+      "label": "模型与解析"
+    }
+  ],
+  "phases": [
+    {
+      "id": "intake",
+      "label": "① 收输入",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "reason",
+      "label": "② 调模型",
+      "fromCol": 2,
+      "toCol": 2,
+      "variant": "emphasis"
+    },
+    {
+      "id": "act",
+      "label": "③ 分支与兜底",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "input",
+    "build",
+    "llm",
+    "parse",
+    "final"
+  ],
+  "nodes": [
+    {
+      "id": "input",
+      "lane": "surface",
+      "col": 0,
+      "type": "external",
+      "label": "用户输入",
+      "sublabel": "REPL",
+      "width": 118
+    },
+    {
+      "id": "final",
+      "lane": "surface",
+      "col": 3,
+      "type": "backend",
+      "label": "final 返回",
+      "sublabel": "AgentReply",
+      "width": 118
+    },
+    {
+      "id": "build",
+      "lane": "loop",
+      "col": 1,
+      "type": "backend",
+      "label": "context.build",
+      "sublabel": "system + 最近原文",
+      "width": 118
+    },
+    {
+      "id": "step",
+      "lane": "loop",
+      "col": 4,
+      "type": "backend",
+      "label": "step++",
+      "sublabel": "回到 ②",
+      "width": 118
+    },
+    {
+      "id": "llm",
+      "lane": "model",
+      "col": 1,
+      "type": "cloud",
+      "label": "LLM 调用",
+      "sublabel": "deepseek-chat",
+      "width": 118
+    },
+    {
+      "id": "parse",
+      "lane": "model",
+      "col": 2,
+      "type": "backend",
+      "label": "解析 JSON",
+      "sublabel": "final / tool_call",
+      "width": 118
+    },
+    {
+      "id": "toolexec",
+      "lane": "model",
+      "col": 3,
+      "type": "messagebus",
+      "label": "执行工具",
+      "sublabel": "ToolRegistry",
+      "width": 118
+    },
+    {
+      "id": "fallback",
+      "lane": "loop",
+      "col": 5,
+      "type": "security",
+      "label": "兜底回答",
+      "sublabel": "stopReason 可见",
+      "width": 118
+    }
+  ],
+  "edges": [
+    {
+      "id": "input-build",
+      "from": "input",
+      "to": "build",
+      "label": "进入 step",
+      "variant": "emphasis"
+    },
+    {
+      "id": "build-llm",
+      "from": "build",
+      "to": "llm",
+      "variant": "emphasis"
+    },
+    {
+      "id": "llm-parse",
+      "from": "llm",
+      "to": "parse"
+    },
+    {
+      "id": "parse-final",
+      "from": "parse",
+      "to": "final",
+      "label": "type=final",
+      "variant": "emphasis"
+    },
+    {
+      "id": "parse-tool",
+      "from": "parse",
+      "to": "toolexec",
+      "label": "tool_call",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tool-step",
+      "from": "toolexec",
+      "to": "step",
+      "label": "结果回灌",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "step-fallback",
+      "from": "step",
+      "to": "fallback",
+      "label": "超限",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "一轮的边界",
+      "items": [
+        "chat() 一次 = 一轮，返回一个 AgentReply",
+        "轮内可多个 step，每个 step 一次 LLM 往返",
+        "steps / toolRounds / parseFailures 独立计数"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "三层兜底",
+      "items": [
+        "模型不守 JSON 协议 → 纠错轮，最多 2 次",
+        "模型无限调工具 → maxToolRounds=6 截断",
+        "网络或额度失败 → 降级回答，不抛栈给用户"
+      ]
+    }
+  ]
+}
